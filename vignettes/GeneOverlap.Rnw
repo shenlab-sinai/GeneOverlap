@@ -1,0 +1,187 @@
+%\VignetteIndexEntry{Testing and visualizing gene overlaps with the "GeneOverlap" package}
+%\VignettePackage{GeneOverlap}
+
+\documentclass{article}
+
+<<style, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex(use.unsrturl=FALSE)
+@
+
+\title{GeneOverlap: An R package to test and visualize gene overlaps}
+
+\author{Li Shen\\
+Contact: \email{li.shen@mssm.edu}\\
+or \email{shenli.sam@gmail.com}\\
+Icahn School of Medicine at Mount Sinai\\
+New York, New York\\
+\url{http://shenlab-sinai.github.io/shenlab-sinai/}
+}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+\tableofcontents
+
+\section{Data preparation} \label{sec:prep}
+Overlapping gene lists can reveal biological meanings and may lead to novel hypotheses. For example, histone modification is an important cellular mechanism that can pack and re-pack chromatin. By making the chromatin structure more dense or loose, the gene expression can be turned on or off. Tri-methylation on lysine 4 of histone H3 (H3K4me3) is associated with gene activation and its genome-wide enrichment can be mapped by using ChIP-seq experiments. Because of its activating role, if we overlap the genes that are bound by H3K4me3 with the genes that are highly expressed, we should expect a positive association. Similary, we can perform such kind of overlapping between the gene lists of different histone modifications with that of various expression groups and establish each histone modification's role in gene regulation.
+
+Mathematically, the problem can be stated as: given a whole set $I$ of IDs and two sets $A \in I$ and $B \in I$, and $S = A \cap B$, what is the significance of seeing $S$? This problem can be formulated as a hypergeometric distribution or a contigency table (which can be solved by Fisher's exact test; see \Rclass{GeneOverlap} documentation). The task is so commonly seen across a biological study that it is worth being made into routines. Therefore, \Rpackage{GeneOverlap} is created to manipulate the data, perform the test and visualize the result of overlaps.
+
+The \Rpackage{GeneOverlap} package is composed of two classes: \Rclass{GeneOverlap} and \Rclass{GeneOverlapMatrix}. The \Rclass{GeneOverlap} class performs the testing and serves as building blocks to the \Rclass{GeneOverlapMatrix} class. First, let's load the package
+<<>>=
+library(GeneOverlap)
+@
+To use the \Rclass{GeneOverlap} class, create two character vectors that represent gene names. An easy way to do this is to use \Rcode{read.table("filename.txt")} to read them from text files. 
+
+As a convenience, a couple of gene lists have been compiled into the \Robject{GeneOverlap} data. Use
+<<>>=
+data(GeneOverlap)
+@
+to load them. Now, let's see what are contained in the data: there are three objects. The \Robject{hESC.ChIPSeq.list} and \Robject{hESC.RNASeq.list} objects contain gene lists from ChIP-seq and RNA-seq experiments. The \Robject{gs.RNASeq} variable contains the number of genes in the genomic background. Refer to Section~\ref{sec:data} for details about how they were created. Let's see how many genes are there in the gene lists.
+<<>>=
+sapply(hESC.ChIPSeq.list, length)
+sapply(hESC.RNASeq.list, length)
+gs.RNASeq
+@
+In \Rpackage{GeneOverlap}, we refer to a collection of gene lists as a gene set that is represented as a named list. Here we can see that the ChIP-seq gene set contains four gene lists of different histone marks: H3K4me3, H3K9me3, H3K27me3 and H3K36me3; the RNA-seq gene set contains three gene lists of different expression levels: High, Medium and Low. Two histone marks are associated with gene activation: H3K4me3 and H3K36me3 while the other two are associated with gene repression: H3K9me3 and H3K27me3.
+
+\section{Testing overlap between two gene lists} \label{sec:test}
+We want to explore whether the activation mark - H3K4me3 is associated with genes that are highly expressed. First, let's construct a \Rclass{GeneOverlap} object
+<<>>=
+go.obj <- newGeneOverlap(hESC.ChIPSeq.list$H3K4me3, 
+                         hESC.RNASeq.list$"Exp High", 
+                         genome.size=gs.RNASeq)
+go.obj
+@
+As we can see, the \Rclass{GeneOverlap} constructor has already done some basic statistics for us, such as the number of intersections. To test the statistical significance of association, we do
+<<>>=
+go.obj <- testGeneOverlap(go.obj)
+go.obj
+@
+The \Rclass{GeneOverlap} class formulates the problem as testing whether two variables are independent, which can be represented as a contingency table, and then uses Fisher's exact test to find the statistical significance. Here the P-value is zero, which means the overlap is highly significant. The Fisher's exact test also gives an odds ratio which represents the strength of association. If an odds ratio is equal to or less than 1, there is no association between the two lists. If the odds ratio is much larger than 1, then the association is strong. The class also calculates the Jaccard index which measures the similarity between two lists. The Jaccard index varies between 0 and 1, with 0 meaning there is no similarity between the two and 1 meaning the two are identical. To show some more details, use the \Rfunction{print} function
+<<>>=
+print(go.obj)
+@
+which shows the odds ratio to be 9.0 and the Jaccard index to be 0.4. The \Rfunction{print} function also displays the contingency table which illustrates how the problem is formulated.
+
+Further, we want to see if H3K4me3 is associated with genes that are lowly expressed. We do
+<<>>=
+go.obj <- newGeneOverlap(hESC.ChIPSeq.list$H3K4me3, 
+                         hESC.RNASeq.list$"Exp Low", 
+                         genome.size=gs.RNASeq)
+go.obj <- testGeneOverlap(go.obj)
+print(go.obj)
+@
+In contrast to the highly expressed genes, the P-value is now 1 with odds ratio 0.1. Therefore, H3K4me3 is not associated with gene suppression.
+
+Once a \Robject{GeneOverlap} object is created, several accessors can be used to extract its slots. For example
+<<>>=
+head(getIntersection(go.obj))
+getOddsRatio(go.obj)
+getContbl(go.obj)
+getGenomeSize(go.obj)
+@
+It is also possible to change slots "listA", "listB" and "genome.size" after object creation. For example
+<<>>=
+setListA(go.obj) <- hESC.ChIPSeq.list$H3K27me3
+setListB(go.obj) <- hESC.RNASeq.list$"Exp Medium"
+go.obj
+@
+After any of the above slots is changed, the object is put into untested status. So we need to re-test it
+<<>>=
+go.obj <- testGeneOverlap(go.obj)
+go.obj
+@
+We can also change the genome size to see how the p-value changes with it
+<<>>=
+v.gs <- c(12e3, 14e3, 16e3, 18e3, 20e3)
+setNames(sapply(v.gs, function(g) {
+    setGenomeSize(go.obj) <- g
+    go.obj <- testGeneOverlap(go.obj)
+    getPval(go.obj)
+}), v.gs)
+@
+As expected, the larger the genome size, the more significant the P-value. That is because, as the "universe" grows, it becomes less and less likely for two gene lists to overlap by chance.
+
+\section{Visualizing all pairwise overlaps} \label{sec:vis}
+When two gene sets each with one or more lists need to be compared, it would be rather inefficient to compare them manually. A matrix can be constructed, where the rows represent the lists from one set while the columns represent the lists from the other set. Each element of the matrix is a GeneOverlap object. To visualize this overlapping information altogether, a heatmap can be used. To illustrate, we want to compare all the gene lists from ChIP-seq with that from RNA-seq
+<<fig=TRUE, echo=TRUE>>=
+gom.obj <- newGOM(hESC.ChIPSeq.list, hESC.RNASeq.list, 
+                  gs.RNASeq)
+drawHeatmap(gom.obj)
+@
+\begin{flushleft}
+That is neat. The \Rfunction{newGOM} constructor creates a new \Rclass{GeneOverlapMatrix} object using two named lists. Then all we need to do is to use the \Rfunction{drawHeatmap} function to show it. In the heatmap, the colorkey represents the odds ratios and the significant p-values are superimposed on the grids.
+\end{flushleft}
+
+To retrieve information from a \Rclass{GeneOverlapMatrix} object, two important accessors called \Rfunction{getMatrix} and \Rfunction{getNestedList} can be used. The \Rfunction{getMatrix} accessor gets information such as p-values as a matrix, for example
+<<>>=
+getMatrix(gom.obj, name="pval")
+@
+or the odds ratios
+<<>>=
+getMatrix(gom.obj, "odds.ratio")
+@
+The \Rfunction{getNestedList} accessor can get gene lists for each comparison as a nested list: the outer list represents the columns and the inner list represents the rows
+<<>>=
+inter.nl <- getNestedList(gom.obj, name="intersection")
+str(inter.nl)
+@
+Another important accessor is the method \Rfunction{"["} that allows one to retrieve \Rclass{GeneOverlap} objects in a matrix-like fashion. For example,
+<<>>=
+go.k4.high <- gom.obj[1, 1]
+go.k4.high
+@
+gets the \Rclass{GeneOverlap} object that represents the comparison between H3K4me3 and highly expressed genes. It is also possible to get \Rclass{GeneOverlap} objects using labels, such as
+<<>>=
+gom.obj["H3K9me3", "Exp Medium"]
+@
+
+\Rclass{GeneOverlapMatrix} can also perform self-comparison on one gene set. For example, if we want to know how the ChIP-seq gene lists associate with each other, we can do
+<<fig=TRUE, echo=TRUE>>=
+gom.self <- newGOM(hESC.ChIPSeq.list, 
+                   genome.size=gs.RNASeq)
+drawHeatmap(gom.self)
+@
+\begin{flushleft}
+Only the upper triangular matrix is used.
+\end{flushleft}
+
+It is also possible to change the number of colors and the colors used for the heatmap. For example
+<<fig=TRUE, echo=TRUE>>=
+drawHeatmap(gom.self, ncolused=5, grid.col="Blues", note.col="black")
+@
+\begin{flushleft}
+or to show the Jaccard index values instead
+\end{flushleft}
+
+<<fig=TRUE, echo=TRUE>>=
+drawHeatmap(gom.self, what="Jaccard", ncolused=3, grid.col="Oranges", 
+            note.col="black")
+@
+
+
+\section{Data source and processing} \label{sec:data}
+The experimental data used here were downloaded from the ENCODE~\cite{ENCODE} project's website. Both ChIP-seq and RNA-seq samples were derived from the human embryonic stem cells (hESC). The raw read files were aligned to the reference genome using Bowtie~\cite{Bowtie} and Tophat~\cite{Tophat}. 
+
+Cufflinks~\cite{Cufflinks} was used to estimate the gene expression levels from the RNA-seq data. Only protein coding genes were retained for further analysis. The genes were filtered by FPKM status and only the genes with "OK" status were kept. This left us with 21,196 coding genes whose FPKM values were reliabled estimated. The genes were then separated into three groups: high (FPKM>10), medium (FPKM>1 and <=10) and low (FPKM<=1). The duplicated gene IDs within each group were removed before testing.
+
+For ChIP-seq, one replicate from IP treatment and one replicate from input control were used. Peak calling was performed using MACS2 (v2.0.10) with default parameter values. The peak lists then went through region annotation using the diffReps package~\cite{diffReps}. After that, the genes that had peaks on genebody and promoter regions were extracted. The genes were further filtered using the RNA-seq gene list obtained above.
+
+\section{SessionInfo}
+<<>>=
+sessionInfo()
+@
+
+\bibliographystyle{apalike}
+\bibliography{GeneOverlap}
+
+\end{document}
+
+
+
+
+
+
