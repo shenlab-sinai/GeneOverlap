@@ -1,7 +1,7 @@
 Package: GeneOverlap
 Type: Package
 Title: Test and visualize gene overlaps
-Version: 0.99.3
+Version: 0.99.4
 Date: 2013-12-13
 Author: Li Shen, Mount Sinai <shenli.sam@gmail.com>
 Maintainer: Li Shen, Mount Sinai <shenli.sam@gmail.com>
@@ -10,7 +10,7 @@ License: GPL-3
 Suggests: RUnit, BiocGenerics, BiocStyle
 Imports: stats, RColorBrewer, gplots, methods
 URL: http://shenlab-sinai.github.io/shenlab-sinai/
-biocViews: Enrichment, MultipleComparisons, Visualization
 Collate: AllClasses.R AllGenerics.R GeneOverlap-accessors.R
         GeneOverlap-methods.R GeneOverlapMatrix-accessors.R
         GeneOverlapMatrix-methods.R
+biocViews: MultipleComparison, Visualization
