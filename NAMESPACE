@@ -1,0 +1,35 @@
+import( methods )
+importFrom( stats, fisher.test )
+importFrom( RColorBrewer, brewer.pal )
+importFrom( gplots, heatmap.2 )
+
+exportClasses( "GeneOverlap", "GeneOverlapMatrix" )
+
+exportMethods(
+    show, print,
+    getListA, "setListA<-",
+    getListB, "setListB<-",
+    getIntersection,
+    getUnion,
+    getGenomeSize, "setGenomeSize<-",
+    getTested,
+    getContbl,
+    getPval,
+    getOddsRatio,
+    getJaccard,
+    testGeneOverlap,
+    getGsetA,
+    getGsetB,
+    getSelfCompare,
+    getMatrix,
+    getNestedList,
+    "[",
+    drawHeatmap
+)
+
+export(
+    newGeneOverlap,
+    newGOM
+)
+
+# exportPattern("^[[:alpha:]]+")
