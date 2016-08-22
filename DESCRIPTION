@@ -1,7 +1,7 @@
 Package: GeneOverlap
 Type: Package
 Title: Test and visualize gene overlaps
-Version: 1.8.0
+Version: 1.9.0
 Date: 2013-12-13
 Author: Li Shen, Mount Sinai <shenli.sam@gmail.com>
 Maintainer: Li Shen, Mount Sinai <shenli.sam@gmail.com>
