@@ -14,8 +14,8 @@
 \tabular{ll}{
 Package: \tab GeneOverlap\cr
 Type: \tab Package\cr
-Version: \tab 0.99.0\cr
-Date: \tab 2013-11-01\cr
+Version: \tab 1.0.1\cr
+Date: \tab 2016-08-22\cr
 License: \tab GPL-3\cr
 }
     To use the package, construct one or two named lists each representing a 
@@ -25,9 +25,9 @@ License: \tab GPL-3\cr
     GeneOverlap internally to perform comparison between two gene lists.
 }
 \author{
-Li Shen <\email{shenli.sam@gmail.com}>
+Li Shen <\email{li.shen@mssm.edu}>
 
-Lab:\url{http://shenlab-sinai.github.io/shenlab-sinai/}
+Mount Sinai profile:\url{http://www.mountsinai.org/profiles/li-shen}
     
 Personal:\url{http://www.linkedin.com/in/lshen/}
 }

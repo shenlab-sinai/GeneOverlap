@@ -40,9 +40,9 @@
 %%  ~~ If necessary, more details than the description above ~~
 }
 \author{
-Li Shen <\email{shenli.sam@gmail.com}>
+Li Shen <\email{li.shen@mssm.edu}>
 
-Lab:\url{http://shenlab-sinai.github.io/shenlab-sinai/}
+Mount Sinai profile:\url{http://www.mountsinai.org/profiles/li-shen}
     
 Personal:\url{http://www.linkedin.com/in/lshen/}
 %%  ~~who you are~~
